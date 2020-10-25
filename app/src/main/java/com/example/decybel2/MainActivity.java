@@ -80,19 +80,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int REQUEST_INTERNET_PERMISSION = 2;
     private static final int REQUEST_COARSE_LOCATION = 3;
     private static final int REQUEST_FINE_LOCATION = 4;
-    private boolean permissionToRecord = false;
-    private boolean permissionInternet = false;
-    private boolean permissionCoarseLocation = false;
-    private boolean permissionFineLocation = false;
     private final String[] permissions = {Manifest.permission.RECORD_AUDIO, Manifest.permission.INTERNET, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
 
     // Lokalizacja
     private String latitude = "", longitude = "";
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
-
-    // Tagi
-    private static final String LOG_TAG_MEDIARECORDER = "MEDIARECORDER", LOG_TAG_LOCATION = "LOCATION", LOG_VOLLEY = "VOLLEY";
 
     /*
      * Deklaracja i definicja funkcji
@@ -105,32 +98,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Gdy dostęp zostanie przyznany
         switch (requestCode) {
-            case REQUEST_RECORD_AUDIO_PERMISSION:
-                permissionToRecord = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                break;
-            case REQUEST_INTERNET_PERMISSION:
-                permissionInternet = grantResults[1] == PackageManager.PERMISSION_GRANTED;
-                break;
-            case REQUEST_COARSE_LOCATION:
-                permissionCoarseLocation = grantResults[2] == PackageManager.PERMISSION_GRANTED;
-                break;
-            case REQUEST_FINE_LOCATION:
-                permissionFineLocation = grantResults[3] == PackageManager.PERMISSION_GRANTED;
-                break;
-        }
-
-        // Gdy dane dostęp nie zostanie przyznany
-        if (!permissionToRecord) {
-            Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do mikrofonu", Toast.LENGTH_LONG).show();
-        }
-        if (!permissionInternet) {
-            Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do internetu", Toast.LENGTH_LONG).show();
-        }
-        if (!permissionCoarseLocation) {
-            Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do lokalizacji", Toast.LENGTH_LONG).show();
-        }
-        if (!permissionFineLocation) {
-            Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do lokalizacji", Toast.LENGTH_LONG).show();
+            case REQUEST_RECORD_AUDIO_PERMISSION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // startRecording();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do mikrofonu", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+            case REQUEST_INTERNET_PERMISSION: {
+                if (grantResults.length > 0 && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    // do sth
+                } else {
+                    Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do internetu", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+            case REQUEST_COARSE_LOCATION: {
+                if (grantResults.length > 0 && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                    // do sth
+                } else {
+                    Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do lokalizacji", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+            case REQUEST_FINE_LOCATION: {
+                if (grantResults.length > 0 && grantResults[3] == PackageManager.PERMISSION_GRANTED) {
+                    // do sth
+                } else {
+                    Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do lokalizacji", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
         }
     }
 
@@ -155,47 +154,59 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
+    private void checkPermissions() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
+        } else {
+            Toast.makeText(MainActivity.this, "Permission already granted", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     // Nagrywanie dźwięku
     private void startRecording() {
         // Przygotowanie do monitorowania natężenia dźwięku
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        recorder.setOutputFile("/dev/null");
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        recorder.setOutputFile("/dev/null");
         try {
             recorder.prepare();
+            Thread.sleep(1000);
         } catch (IOException e) {
             Timber.e("prepare() failed: Błąd metody prepare()");
-        }
-        try {
-            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        recorder.start();
+        try {
+            recorder.start();
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     private void stopRecording() {
-        recorder.stop();
-        recorder.release();
-        recorder = null;
+        if (recorder != null) {
+            recorder.stop();
+            recorder.release();
+            recorder = null;
+        }
     }
 
     // Obiekt odpowiedzialny za monitorowanie natężenia dźwięku i lokalizacji użytkownika
     private class Monitor extends TimerTask {
-        private final MediaRecorder recorder;
+        private MediaRecorder recorder;
 
         public Monitor(MediaRecorder recorder) {
             this.recorder = recorder;
         }
 
-        @Override
         public void run() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
 
+                    checkPermissions();
                     // Lokalizacja
                     locationCallback = new LocationCallback() {
                         @Override
@@ -263,7 +274,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
 
         Mapbox.getInstance(this, getString(R.string.access_token));
-
         setContentView(R.layout.activity_main);
 
         mapView = findViewById(R.id.mapView);
@@ -275,11 +285,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             // Przygotowanie do monitorowania natężenia dźwięku
-            startRecording();
+            if(recorder != null) {
+                recorder = new MediaRecorder();
+                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                recorder.setAudioSamplingRate(44100);
+                recorder.setAudioEncodingBitRate(96000);
 
-            // Rozpoczęcie monitorowania natężenia dźwięku i lokalizacji użytkownika co określony okres czasu
-            timer = new Timer();
-            timer.scheduleAtFixedRate(new Monitor(recorder), 0, 5000);
+                // Rozpoczęcie monitorowania natężenia dźwięku i lokalizacji użytkownika co określony okres czasu
+                timer = new Timer();
+                timer.scheduleAtFixedRate(new Monitor(recorder), 0, 5000);
+
+                recorder.setOutputFile("/dev/null");
+                try {
+                    recorder.prepare();
+                    recorder.start();
+                } catch (IOException e) {
+                    Timber.e("prepare() failed: Błąd metody prepare()");
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
@@ -327,6 +355,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onResume() {
         super.onResume();
         mapView.onResume();
+        // startRecording();
     }
 
     @SuppressLint("NewApi")
@@ -334,19 +363,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onPause() {
         super.onPause();
         mapView.onPause();
+        // stopRecording();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         mapView.onStop();
-        if(recorder != null) {
-            stopRecording();
-        }
-        if(timer != null) {
-            timer.cancel();
-            timer.purge();
-        }
     }
 
     @Override
@@ -365,12 +388,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
-        if(recorder != null) {
-            stopRecording();
-        }
-        if(timer != null) {
-            timer.cancel();
-            timer.purge();
-        }
     }
 }
