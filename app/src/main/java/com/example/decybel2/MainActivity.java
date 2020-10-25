@@ -59,8 +59,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Deklaracja i definicja zmiennych globalnych
      */
 
-    Timer timer;
-
     // MapView
     private MapView mapView;
 
@@ -93,11 +91,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch (requestCode) {
             case REQUEST_RECORD_AUDIO_PERMISSION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // startRecording();
+                    // do sth
                 } else {
                     Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do mikrofonu", Toast.LENGTH_LONG).show();
                 }
-                return;
             }
             case REQUEST_INTERNET_PERMISSION: {
                 if (grantResults.length > 0 && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
@@ -105,7 +102,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 } else {
                     Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do internetu", Toast.LENGTH_LONG).show();
                 }
-                return;
             }
             case REQUEST_COARSE_LOCATION: {
                 if (grantResults.length > 0 && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
@@ -113,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 } else {
                     Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do lokalizacji", Toast.LENGTH_LONG).show();
                 }
-                return;
             }
             case REQUEST_FINE_LOCATION: {
                 if (grantResults.length > 0 && grantResults[3] == PackageManager.PERMISSION_GRANTED) {
@@ -121,7 +116,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 } else {
                     Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do lokalizacji", Toast.LENGTH_LONG).show();
                 }
-                return;
             }
         }
     }
@@ -142,7 +136,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             ActivityCompat.requestPermissions(this, permissions, REQUEST_COARSE_LOCATION);
             ActivityCompat.requestPermissions(this, permissions, REQUEST_FINE_LOCATION);
-            return;
         }
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
@@ -152,37 +145,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
         } else {
             Toast.makeText(MainActivity.this, "Permission already granted", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    // Nagrywanie dźwięku
-    private void startRecording() {
-        // Przygotowanie do monitorowania natężenia dźwięku
-        recorder = new MediaRecorder();
-        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        recorder.setOutputFile("/dev/null");
-        try {
-            recorder.prepare();
-            Thread.sleep(1000);
-        } catch (IOException e) {
-            Timber.e("prepare() failed: Błąd metody prepare()");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        try {
-            recorder.start();
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-    }
-
-    private void stopRecording() {
-        if (recorder != null) {
-            recorder.stop();
-            recorder.release();
-            recorder = null;
         }
     }
 
@@ -218,7 +180,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     startLocationUpdates();  // pobranie lokalizacji użytkownika
 
-                    intensity = Double.toString(20 * Math.log10((double) Math.abs(recorder.getMaxAmplitude())));  // Pobranie natężenia dżwięku
+                    try {
+                        intensity = Double.toString(20 * Math.log10((double) Math.abs(recorder.getMaxAmplitude())));  // Pobranie natężenia dżwięku
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                     // Wysłanie danych do serwera przy pomocy biblioteki Volley
                     String url = "http://kubaki18.pythonanywhere.com/" + intensity + "/" + longitude + "/" + latitude;
@@ -278,28 +244,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             // Przygotowanie do monitorowania natężenia dźwięku
-            if(recorder != null) {
-                recorder = new MediaRecorder();
-                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
-                recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                recorder.setAudioSamplingRate(44100);
-                recorder.setAudioEncodingBitRate(96000);
 
-                // Rozpoczęcie monitorowania natężenia dźwięku i lokalizacji użytkownika co określony okres czasu
-                timer = new Timer();
-                timer.scheduleAtFixedRate(new Monitor(recorder), 0, 5000);
-
-                recorder.setOutputFile("/dev/null");
-                try {
-                    recorder.prepare();
-                    recorder.start();
-                } catch (IOException e) {
-                    Timber.e("prepare() failed: Błąd metody prepare()");
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
+            recorder = new MediaRecorder();
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            recorder.setAudioSamplingRate(44100);
+            recorder.setAudioEncodingBitRate(96000);
+            recorder.setOutputFile("/dev/null");
+            try {
+                recorder.prepare();
+                recorder.start();
+            } catch (IOException e) {
+                Timber.e("prepare() failed: Błąd metody prepare()");
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
+
+            // Rozpoczęcie monitorowania natężenia dźwięku i lokalizacji użytkownika co określony okres czasu
+            Timer timer = new Timer();
+            timer.scheduleAtFixedRate(new Monitor(recorder), 0, 5000);
 
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -348,7 +312,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onResume() {
         super.onResume();
         mapView.onResume();
-        // startRecording();
     }
 
     @SuppressLint("NewApi")
@@ -356,7 +319,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onPause() {
         super.onPause();
         mapView.onPause();
-        // stopRecording();
     }
 
     @Override
