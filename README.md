@@ -11,4 +11,5 @@ Użytkowniku, aby cieszyć się możliwie najlepszym działaniem aplikacji, upew
  * Zezwolisz aplikacji na nagrywanie dźwięku.
 
 Życzymy miłego korzystania :)
+
 Autorzy
