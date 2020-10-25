@@ -42,6 +42,8 @@ import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.sources.VectorSource;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -152,11 +154,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Obiekt odpowiedzialny za monitorowanie natężenia dźwięku i lokalizacji użytkownika
     private class Monitor extends TimerTask {
         private final MediaRecorder recorder;
-        private LocationManager locationManager;
 
-        public Monitor(MediaRecorder recorder, LocationManager locationManager) {
+        public Monitor(MediaRecorder recorder) {
             this.recorder = recorder;
-            this.locationManager = locationManager;
         }
 
         @Override
@@ -259,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             // Rozpoczęcie monitorowania natężenia dźwięku i lokalizacji użytkownika co określony okres czasu
             Timer timer = new Timer();
-            timer.scheduleAtFixedRate(new Monitor(recorder, locationManager), 0, 5000);
+            timer.scheduleAtFixedRate(new Monitor(recorder), 0, 5000);
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
@@ -321,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NotNull Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
     }
