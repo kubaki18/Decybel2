@@ -2,6 +2,7 @@ package com.example.decybel2;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -49,6 +50,8 @@ import timber.log.Timber;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.exponential;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.interpolate;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.linear;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleOpacity;
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     // do sth
                 } else {
                     Toast.makeText(getApplicationContext(), "Aby aplikacja mogła w pełni funkcjonować, wymagany jest dostęp do mikrofonu", Toast.LENGTH_LONG).show();
+//                    ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
                 }
             }
             case REQUEST_INTERNET_PERMISSION: {
@@ -230,15 +234,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
+//        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
+
         // Lokalizacja
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             // Przygotowanie do monitorowania natężenia dźwięku
 
             recorder = new MediaRecorder();
             recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
-            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4); // MPEG_2_TS
             recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
             recorder.setAudioSamplingRate(44100);
             recorder.setAudioEncodingBitRate(96000);
@@ -254,8 +260,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             // Rozpoczęcie monitorowania natężenia dźwięku i lokalizacji użytkownika co określony okres czasu
             Timer timer = new Timer();
-            timer.scheduleAtFixedRate(new Monitor(recorder), 0, 5000);
-
+            timer.scheduleAtFixedRate(new Monitor(recorder), 0, 15000);
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
@@ -280,7 +285,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 circleLayer.setSourceLayer("loudness");
                 circleLayer.withProperties(
                         circleOpacity(0.6f),
-                        circleColor(Color.parseColor("#ffffff")),
+                        circleColor(interpolate(linear(), get("loudness"),
+                                stop(0, rgb(0, 208, 79)),
+                                stop(90, rgb(243, 148, 47)),
+                                stop(150, rgb(255, 41, 28))
+                        )),
                         circleRadius(interpolate(exponential(1.0f), get("loudness"),
                                 stop(0, 0f),
                                 stop(1, 1f),
