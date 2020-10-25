@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "816355269855",
+    "firebase_url": "https://decybel-90c2c.firebaseio.com",
+    "project_id": "decybel-90c2c",
+    "storage_bucket": "decybel-90c2c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:816355269855:android:14f61966bc87bacba41d6a",
+        "android_client_info": {
+          "package_name": "com.example.decybel2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "816355269855-46c94iukhnqfs7kvjfqvgv2q53a7koc2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQj9B4_z9LfYuB3pH6EmmSNeclfOY-yko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "816355269855-46c94iukhnqfs7kvjfqvgv2q53a7koc2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
