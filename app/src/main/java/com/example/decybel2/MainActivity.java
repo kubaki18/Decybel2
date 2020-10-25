@@ -2,19 +2,13 @@ package com.example.decybel2;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationManager;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
-import android.util.Log;
-import android.view.View;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -34,7 +28,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
@@ -308,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         circleRadius(interpolate(exponential(1.0f), get("loudness"),
                                 stop(0, 0f),
                                 stop(1, 1f),
-                                stop(110, 11f)
+                                stop(110, 3f)
                         ))
                 );
                 style.addLayer(circleLayer);
