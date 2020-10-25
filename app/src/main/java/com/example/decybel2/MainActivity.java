@@ -1,6 +1,7 @@
 package com.example.decybel2;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -65,11 +66,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Deklaracja i definicja zmiennych globalnych
      */
 
+    Timer timer;
+
     // MapView
     private MapView mapView;
 
     // Monitorowanie dźwięku
     private String intensity = "";
+    MediaRecorder recorder;
 
     // Dostęp do narzędzi
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 1;
@@ -149,6 +153,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+
+    // Nagrywanie dźwięku
+    private void startRecording() {
+        // Przygotowanie do monitorowania natężenia dźwięku
+        recorder = new MediaRecorder();
+        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        recorder.setOutputFile("/dev/null");
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        try {
+            recorder.prepare();
+        } catch (IOException e) {
+            Timber.e("prepare() failed: Błąd metody prepare()");
+        }
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        recorder.start();
+    }
+
+    private void stopRecording() {
+        recorder.stop();
+        recorder.release();
+        recorder = null;
     }
 
     // Obiekt odpowiedzialny za monitorowanie natężenia dźwięku i lokalizacji użytkownika
@@ -240,25 +271,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.getMapAsync(this);
 
         // Lokalizacja
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             // Przygotowanie do monitorowania natężenia dźwięku
-            MediaRecorder recorder = new MediaRecorder();
-            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);  // Ustawienie mikrofonu jako źródła dźwięku
-            recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            recorder.setOutputFile("/dev/null");
-            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            try {
-                recorder.prepare();
-            } catch (IOException e) {
-                Timber.e("prepare() failed: Błąd metody prepare()");
-            }
-            recorder.start();
+            startRecording();
 
             // Rozpoczęcie monitorowania natężenia dźwięku i lokalizacji użytkownika co określony okres czasu
-            Timer timer = new Timer();
+            timer = new Timer();
             timer.scheduleAtFixedRate(new Monitor(recorder), 0, 5000);
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -302,12 +322,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.onStart();
     }
 
+    @SuppressLint("NewApi")
     @Override
     protected void onResume() {
         super.onResume();
         mapView.onResume();
     }
 
+    @SuppressLint("NewApi")
     @Override
     protected void onPause() {
         super.onPause();
@@ -318,6 +340,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStop() {
         super.onStop();
         mapView.onStop();
+        if(recorder != null) {
+            stopRecording();
+        }
+        if(timer != null) {
+            timer.cancel();
+            timer.purge();
+        }
     }
 
     @Override
@@ -336,5 +365,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+        if(recorder != null) {
+            stopRecording();
+        }
+        if(timer != null) {
+            timer.cancel();
+            timer.purge();
+        }
     }
 }
