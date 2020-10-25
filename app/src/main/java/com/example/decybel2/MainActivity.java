@@ -140,14 +140,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
-    private void checkPermissions() {
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
-        } else {
-            Toast.makeText(MainActivity.this, "Permission already granted", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     // Obiekt odpowiedzialny za monitorowanie natężenia dźwięku i lokalizacji użytkownika
     private class Monitor extends TimerTask {
         private MediaRecorder recorder;
@@ -161,7 +153,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void run() {
 
-                    checkPermissions();
                     // Lokalizacja
                     locationCallback = new LocationCallback() {
                         @Override
