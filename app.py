@@ -31,5 +31,5 @@ def main(loudness, lng, lat):
             """)
             for row in data[-3:]:
                 file.write(row)
-        os.system("export MAPBOX_ACCESS_TOKEN=sk.eyJ1Ijoia3ViYWtpMTgiLCJhIjoiY2tnb3g2d2t0M2plMDJyczFjdmx5ajNxbCJ9.GwDQJQHdReRIi_874cppkw | tilesets upload-source kubaki18 loudness-source data.geojson | tilesets publish kubaki18.loudness")
+        os.system("export MAPBOX_ACCESS_TOKEN=HERE_GOES_SECRET_KEY | tilesets upload-source kubaki18 loudness-source data.geojson | tilesets publish kubaki18.loudness")
         print("Sent!")
